@@ -21,6 +21,7 @@ export default function Home() {
         setError('Failed to fetch content.');
       }
     } catch (error) {
+      console.log('ERROR: ', error);
       setError('Failed to fetch content.');
     }
   };
