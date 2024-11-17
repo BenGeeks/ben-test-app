@@ -1,12 +1,14 @@
 'use client';
 import { fetchPageBody } from '@/services/ben-scrapper';
 import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 export default function Home() {
   const [url, setUrl] = useState('');
-  const [content, setContent] = useState<string[]>([]);
-  const [links, setLinks] = useState<string[]>([]);
+  const [markdown, setMarkdown] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  console.log('MARK DOWN RESULT: ', markdown);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -15,13 +17,12 @@ export default function Home() {
     try {
       const result = await fetchPageBody(url);
       if (result) {
-        setContent(result.content);
-        setLinks(result.links);
+        setMarkdown(result.markdown); // Update to handle Markdown content
       } else {
         setError('Failed to fetch content.');
       }
     } catch (error) {
-      console.log('ERROR: ', error);
+      console.error('ERROR: ', error);
       setError('Failed to fetch content.');
     }
   };
@@ -46,8 +47,8 @@ export default function Home() {
           type="button"
           className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
           onClick={() => {
-            setContent([]);
-            setLinks([]);
+            setMarkdown(null);
+            setError(null);
           }}
         >
           Clear Result
@@ -59,17 +60,10 @@ export default function Home() {
         <div className="p-4 bg-gray-50 border rounded-lg h-full overflow-y-auto text-black">
           {error ? (
             <p>{error}</p>
+          ) : markdown ? (
+            <ReactMarkdown>{markdown}</ReactMarkdown> // Render Markdown content
           ) : (
-            <>
-              <h3 className="mt-4 font-semibold">Page Content:</h3>
-              {content.map((line, index) => (
-                <p key={index}>{line}</p>
-              ))}
-              <h3 className="mt-4 font-semibold">Links:</h3>
-              {links.map((link, index) => (
-                <p key={`link-${index}`}>{link}</p>
-              ))}
-            </>
+            <p>No content fetched yet.</p>
           )}
         </div>
       </div>
