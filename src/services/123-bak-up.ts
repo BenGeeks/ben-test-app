@@ -145,7 +145,7 @@ export async function fetchPageBody(url: string): Promise<{ markdown: string } |
       }
     }
 
-    // Start traversal from the document body
+    // Start traversal from the document body 123
     traverse(document.body);
 
     return { markdown };
