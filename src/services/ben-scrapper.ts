@@ -52,10 +52,6 @@ export async function fetchPageBody(url: string): Promise<{ markdown: string } |
       document.querySelectorAll(selector).forEach((element) => element.remove());
     });
 
-    console.log('===================================================================');
-    console.log('DOCUMENT BODY INNER HTML: ', document.body.innerHTML);
-    console.log('===================================================================');
-
     // Convert the modified HTML to Markdown
     const markdown = NodeHtmlMarkdown.translate(document.body.innerHTML); // Use innerHTML for conversion
     console.log('MARKDOWN: ', markdown);
