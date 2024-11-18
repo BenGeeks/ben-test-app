@@ -1,6 +1,7 @@
 'use client';
 import { fetchPageBody } from '@/services/ben-scrapper';
 import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 export default function Home() {
   const [url, setUrl] = useState('');
@@ -57,7 +58,13 @@ export default function Home() {
       <div className="mt-8 w-full max-w-4xl bg-white p-4 border rounded-lg shadow-md h-[70vh]">
         <h2 className="text-lg font-semibold mb-2 text-black">Fetched Content:</h2>
         <div className="p-4 bg-gray-50 border rounded-lg h-full overflow-y-auto text-black">
-          {error ? <p>{error}</p> : markdown ? <>{markdown}</> : <p>No content fetched yet.</p>}
+          {error ? (
+            <p>{error}</p>
+          ) : markdown ? (
+            <ReactMarkdown>{markdown}</ReactMarkdown> // Render Markdown content
+          ) : (
+            <p>No content fetched yet.</p>
+          )}
         </div>
       </div>
     </div>

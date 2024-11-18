@@ -21,8 +21,10 @@ const elementsToRemove = [
   'div.footer-wrapper',
   'div.shopify-section-group-footer-group',
   'div.ad',
+  'div.google-ad',
   'div.sidebar',
   'div.promo',
+  'div.CMasterHeader',
   'cart-drawer',
   'img',
   'input',
@@ -47,14 +49,25 @@ export async function fetchPageBody(url: string): Promise<{ markdown: string } |
     const dom = new JSDOM(html);
     const document = dom.window.document;
 
+    console.log('============================================');
+    console.log('RAW DOCUMENT BODY: ', document.body.innerHTML);
+    console.log('============================================');
+
     // Remove non-content elements
     elementsToRemove.forEach((selector) => {
       document.querySelectorAll(selector).forEach((element) => element.remove());
     });
 
+    console.log('============================================');
+    console.log('FILTERED DOCUMENT BODY: ', document.body.innerHTML);
+    console.log('============================================');
+
     // Convert the modified HTML to Markdown
     const markdown = NodeHtmlMarkdown.translate(document.body.innerHTML); // Use innerHTML for conversion
-    console.log('MARKDOWN: ', markdown);
+
+    console.log('============================================');
+    console.log('FINAL MARKDOWN RESULT: ', markdown);
+    console.log('============================================');
 
     return { markdown };
   } catch (error) {
