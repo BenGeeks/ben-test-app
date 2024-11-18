@@ -61,7 +61,10 @@ export default function Home() {
           {error ? (
             <p>{error}</p>
           ) : markdown ? (
-            <ReactMarkdown>{markdown}</ReactMarkdown> // Render Markdown content
+            <>
+              {markdown}
+              {/* <ReactMarkdown>{markdown}</ReactMarkdown> // Render Markdown content */}
+            </>
           ) : (
             <p>No content fetched yet.</p>
           )}
