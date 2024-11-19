@@ -1,36 +1,60 @@
 'use client';
-import { fetchPageBody } from '@/services/ben-scrapper';
-import { useState } from 'react';
+import { scrapePageBody, scrapeHeaderFooter } from '@/services/ben-scrapper';
 import ReactMarkdown from 'react-markdown';
+import { useState } from 'react';
 
 export default function Home() {
   const [url, setUrl] = useState('');
   const [markdown, setMarkdown] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   console.log('MARK DOWN RESULT: ', markdown);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleScapeBody = async (e: React.FormEvent) => {
+    setIsLoading(true);
     e.preventDefault();
     if (!url) return;
 
     try {
-      const result = await fetchPageBody(url);
+      const result = await scrapePageBody(url);
       if (result) {
-        setMarkdown(result.markdown); // Update to handle Markdown content
+        setMarkdown(result.markdown);
       } else {
         setError('Failed to fetch content.');
       }
     } catch (error) {
       console.error('ERROR: ', error);
       setError('Failed to fetch content.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleScrapeHeaderFooter = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    if (!url) return;
+
+    try {
+      const result = await scrapeHeaderFooter(url);
+      if (result) {
+        setMarkdown(result.markdown);
+      } else {
+        setError('Failed to fetch content.');
+      }
+    } catch (error) {
+      console.error('ERROR: ', error);
+      setError('Failed to fetch content.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100">
       <h1 className="text-2xl font-bold mb-6 text-black">Simple URL Scraper</h1>
-      <form onSubmit={handleSubmit} className="w-full max-w-md flex flex-col gap-4">
+      <form className="w-full max-w-md flex flex-col gap-4">
         <input
           type="url"
           value={url}
@@ -40,16 +64,30 @@ export default function Home() {
           required
         />
 
-        <button type="submit" className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-          Fetch Content
+        <button
+          type="button"
+          className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center justify-center h-10"
+          onClick={handleScapeBody}
+          disabled={isLoading}
+        >
+          {isLoading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : 'Scrape BODY Content'}
         </button>
         <button
           type="button"
-          className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+          className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center justify-center h-10"
+          onClick={handleScrapeHeaderFooter}
+          disabled={isLoading}
+        >
+          {isLoading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : 'Scrape HEADER FOOTER Content'}
+        </button>
+        <button
+          type="reset"
+          className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-slate-500 transition"
           onClick={() => {
             setMarkdown(null);
             setError(null);
           }}
+          disabled={isLoading}
         >
           Clear Result
         </button>
@@ -58,13 +96,7 @@ export default function Home() {
       <div className="mt-8 w-full max-w-4xl bg-white p-4 border rounded-lg shadow-md h-[70vh]">
         <h2 className="text-lg font-semibold mb-2 text-black">Fetched Content:</h2>
         <div className="p-4 bg-gray-50 border rounded-lg h-full overflow-y-auto text-black">
-          {error ? (
-            <p>{error}</p>
-          ) : markdown ? (
-            <ReactMarkdown>{markdown}</ReactMarkdown> // Render Markdown content
-          ) : (
-            <p>No content fetched yet.</p>
-          )}
+          {error ? <p>{error}</p> : markdown ? <ReactMarkdown>{markdown}</ReactMarkdown> : <p>No content fetched yet.</p>}
         </div>
       </div>
     </div>
