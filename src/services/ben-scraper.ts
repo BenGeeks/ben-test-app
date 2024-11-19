@@ -29,6 +29,7 @@ const elementsToRemove = [
   'div#top-footer',
   'div#footer-container',
   'div.footer-wrapper',
+  'div.header-wrapper',
   'div.shopify-section-group-footer-group',
   'div.ad',
   'div.google-ad',
@@ -93,12 +94,13 @@ const elementsToScrape = [
   'div.footer-bottom',
   'div#top-footer',
   'div#footer-container',
-  'div.footer-wrapper',
   'div.shopify-section-group-footer-group',
   'div#cv-zone-topbar',
   'div#cv-zone-header',
   'div#cv-zone-navigation-container',
   'div#cv-zone-footer',
+  'div.footer-wrapper',
+  'div.header-wrapper',
 ];
 
 export async function scrapeHeaderFooter(url: string): Promise<{ markdown: string } | null> {
