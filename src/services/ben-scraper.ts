@@ -54,17 +54,9 @@ export async function scrapePageBody(url: string): Promise<{ markdown: string } 
     const dom = new JSDOM(html);
     const document = dom.window.document;
 
-    console.log('============================================');
-    console.log('RAW DOCUMENT BODY: ', document.body.innerHTML);
-    console.log('============================================');
-
     elementsToRemove.forEach((selector) => {
       document.querySelectorAll(selector).forEach((element) => element.remove());
     });
-
-    console.log('============================================');
-    console.log('FILTERED DOCUMENT BODY: ', document.body.innerHTML);
-    console.log('============================================');
 
     const markdown = NodeHtmlMarkdown.translate(document.body.innerHTML);
 
@@ -79,28 +71,32 @@ export async function scrapePageBody(url: string): Promise<{ markdown: string } 
   }
 }
 
-const headerFooterElementsToRemove = ['img', 'path', 'svg', 'label', 'input', 'select', 'option', 'button'];
+const headerFooterElementsToRemove = ['img', 'path', 'svg', 'label', 'input', 'select', 'option', 'button', 'main', 'div.main', 'div.main-wrapper'];
 
 const elementsToScrape = [
   'header',
-  'footer',
-  'nav',
-  'aside',
+  'div.header',
   'div#header',
   'div.section-header',
-  'div#supermenu',
-  'div#supermenu-mobile',
-  'div#footer',
-  'div.footer-bottom',
-  'div#top-footer',
-  'div#footer-container',
-  'div.shopify-section-group-footer-group',
   'div#cv-zone-topbar',
   'div#cv-zone-header',
+  'div.header-wrapper',
+
+  'nav',
+  'div.nav',
+  'div#supermenu',
+  'div#supermenu-mobile',
   'div#cv-zone-navigation-container',
+
+  'footer',
+  'div.footer',
+  'div#footer',
+  'div#top-footer',
+  'div.footer-bottom',
   'div#cv-zone-footer',
   'div.footer-wrapper',
-  'div.header-wrapper',
+  'div#footer-container',
+  'div.shopify-section-group-footer-group',
 ];
 
 export async function scrapeHeaderFooter(url: string): Promise<{ markdown: string } | null> {
@@ -112,10 +108,6 @@ export async function scrapeHeaderFooter(url: string): Promise<{ markdown: strin
     const dom = new JSDOM(html);
     const document = dom.window.document;
 
-    console.log('============================================');
-    console.log('HEADER FOOTER: RAW DOCUMENT: ', document.body.innerHTML);
-    console.log('============================================');
-
     headerFooterElementsToRemove.forEach((selector) => {
       document.querySelectorAll(selector).forEach((element) => element.remove());
     });
@@ -123,20 +115,47 @@ export async function scrapeHeaderFooter(url: string): Promise<{ markdown: strin
     // Create a container to hold the scraped content
     const scrapedContent = document.createElement('div');
 
+    const separatorBeforeHeader = document.createElement('hr');
+    const headerHeading = document.createElement('h1');
+    headerHeading.textContent = 'Header';
+    const separatorAfterHeaderHeading = document.createElement('hr');
+
+    // Append separator and heading to the scrapedContent container
+    scrapedContent.appendChild(separatorBeforeHeader);
+    scrapedContent.appendChild(headerHeading);
+    scrapedContent.appendChild(separatorAfterHeaderHeading);
+
+    let headerFound = false;
+
     elementsToScrape.forEach((selector) => {
       document.querySelectorAll(selector).forEach((element) => {
-        // Append the element's content to the scrapedContent container
         const clonedElement = element.cloneNode(true);
+
+        if (!headerFound && /header/i.test(selector)) {
+          headerFound = true;
+        } else if (headerFound && /footer/i.test(selector)) {
+          // Insert a separator before scraping footer elements
+          const separatorBeforeFooter = document.createElement('hr');
+          const footerHeading = document.createElement('h1');
+          footerHeading.textContent = 'Footer';
+          const separatorAfterFooterHeading = document.createElement('hr');
+
+          // Append separator and heading to the scrapedContent container
+          scrapedContent.appendChild(separatorBeforeFooter);
+          scrapedContent.appendChild(footerHeading);
+          scrapedContent.appendChild(separatorAfterFooterHeading);
+
+          // Reset headerFound to avoid additional separators
+          headerFound = false;
+        }
+
+        // Append the element's content to the scrapedContent container
         scrapedContent.appendChild(clonedElement);
 
         // Remove the element from the main document to avoid duplication
         element.remove();
       });
     });
-
-    console.log('============================================');
-    console.log('HEADER FOOTER: SCRAPED CONTENT: ', scrapedContent.innerHTML);
-    console.log('============================================');
 
     const markdown = NodeHtmlMarkdown.translate(scrapedContent.innerHTML);
 
