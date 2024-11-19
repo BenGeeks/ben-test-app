@@ -78,6 +78,8 @@ export async function scrapePageBody(url: string): Promise<{ markdown: string } 
   }
 }
 
+const headerFooterElementsToRemove = ['img', 'path', 'svg', 'label', 'input', 'select', 'option', 'button'];
+
 const elementsToScrape = [
   'header',
   'footer',
@@ -111,6 +113,10 @@ export async function scrapeHeaderFooter(url: string): Promise<{ markdown: strin
     console.log('============================================');
     console.log('HEADER FOOTER: RAW DOCUMENT: ', document.body.innerHTML);
     console.log('============================================');
+
+    headerFooterElementsToRemove.forEach((selector) => {
+      document.querySelectorAll(selector).forEach((element) => element.remove());
+    });
 
     // Create a container to hold the scraped content
     const scrapedContent = document.createElement('div');

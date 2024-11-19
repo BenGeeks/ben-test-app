@@ -1,5 +1,5 @@
 'use client';
-import { scrapePageBody, scrapeHeaderFooter } from '@/services/ben-scrapper';
+import { scrapePageBody, scrapeHeaderFooter } from '@/services/ben-scraper';
 import ReactMarkdown from 'react-markdown';
 import { useState } from 'react';
 
