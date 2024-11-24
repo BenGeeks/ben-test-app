@@ -36,6 +36,7 @@ const elementsToRemove = [
   'div.sidebar',
   'div.promo',
   'div.CMasterHeader',
+  'div.announcement-slider__content',
   'cart-drawer',
   'section.productCarousel',
   'div.megamenu',
