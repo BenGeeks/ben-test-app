@@ -1,16 +1,47 @@
 'use server';
-import axios from 'axios';
 import { JSDOM } from 'jsdom';
+import puppeteer from 'puppeteer-extra';
 import probe from 'probe-image-size';
 
-const WHERE_TO_SCRAPE = ['div#main-image-container', 'div.listing-page-image-carousel-component', 'div.product-image-wrapper'];
+const ELEMENTS_TO_REMOVE = ['script', 'noscript', 'style', 'header', 'footer', 'nav', 'aside', 'label', 'input', 'select', 'option', 'link', 'iframe', 'meta'];
+
+let s = {
+  'www.etsy.com': ['div.image-carousel-container', 'div.listing-page-image-carousel-component', 'div#main-image-container', 'div.product-image-wrapper'],
+};
+
+const scrapingSelectors: Record<string, string[]> = {
+  'www.amazon.com': ['div#main-image-container'],
+  'www.macys.com': ['div.productImage', 'div.product-image-wrapper'],
+  'www.sweetwater.com': ['div#product-gallery', 'div.image-gallery', 'div.product-image-col'],
+  'www.lazada.com.ph': ['div.gallery-preview-panel', 'div.gallery-preview-panel'],
+  'www.ebay.com': ['div.ux-image-carousel-item'],
+  'www.target.com': ['div[data-test="image-gallery-item-0"]'],
+  'www.bestbuy.com': ['div.primary-image img', 'div.gallery-wrapper img'],
+  'www.walmart.com': ['div[data-testid="zoom-image"]'],
+  'www.wayfair.com': ['div[data-enzyme-id="FluidImage-wrapper"]'],
+  'www.craigslist.org': ['body'],
+  'www.costco.com': ['div.zoomViewer'],
+  'www.chewy.com': ['div[data-testid="product-carousel"]'],
+
+  'www.kroger.com': ['body'],
+  'www.apple.com': ['picture.overview-hero-hero-static-1'],
+  'www.homedepot.com': ['body'],
+  'shopee.ph': ['body'],
+
+  'www.temu.com': ['div.mainContent', 'div.product-image-container'],
+  'www.etsy.com': ['div.image-carousel-container'],
+  'www.lowes.com': ['div.viewport'], //access denied
+
+  'www.newegg.com': ['div.product-view-img-original img', 'div.product-image img'],
+
+  'www.ikea.com': ['div.range-image-gallery img', 'div.product-pictures img'],
+  'www.kohls.com': ['div.product-image-main img', 'div.thumbnail-container img'],
+};
 
 async function getImageDimensions(url: string): Promise<{ url: string; width: number; height: number } | null> {
   try {
-    console.log('============================================================');
-    console.log(`Fetching dimensions for image: ${url}`);
+    console.log('Fetching dimensions for image:', url);
     const result = await probe(url);
-    console.log('Fetched dimensions:', result);
     return { url, width: result.width, height: result.height };
   } catch (error) {
     console.error(`Failed to fetch dimensions for image: ${url}`, error);
@@ -18,25 +49,54 @@ async function getImageDimensions(url: string): Promise<{ url: string; width: nu
   }
 }
 
+async function scrapeWithPuppeteer(url: string): Promise<string> {
+  try {
+    const browser = await puppeteer.launch({ headless: true });
+    const page = await browser.newPage();
+
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36');
+    await page.setViewport({ width: 1920, height: 1080 });
+
+    await page.goto(url, { waitUntil: 'networkidle2' });
+
+    const content = await page.content();
+    await browser.close();
+    return content;
+  } catch (error) {
+    console.error('Error using Puppeteer to scrape content:', error);
+    throw error;
+  }
+}
+
 export async function imgScraper(url: string): Promise<string | null> {
   console.log('IMAGE SCRAPER HAS BEEN CALLED: ', url);
-  try {
-    const response = await axios.get(url);
-    const html = response.data;
 
+  try {
+    const domain = new URL(url).hostname;
+    console.log('DOMAIN: ', domain);
+    const WHERE_TO_SCRAPE = scrapingSelectors[domain] || ['body'];
+    console.log('WHERE TO SCRAPE: ', WHERE_TO_SCRAPE);
+
+    const html = await scrapeWithPuppeteer(url);
     const dom = new JSDOM(html);
     const document = dom.window.document;
 
+    ELEMENTS_TO_REMOVE.forEach((selector) => {
+      document.querySelectorAll(selector).forEach((element) => element.remove());
+    });
+
     const scrapedImages: string[] = [];
 
-    // Focus on specified elements to scrape images
+    console.log('DOCUMENT HTML: ', document.documentElement.outerHTML);
+
     WHERE_TO_SCRAPE.forEach((selector) => {
       document.querySelectorAll(selector).forEach((element) => {
+        console.log('ELEMENT: ', element);
         const images = Array.from(element.querySelectorAll('img'))
           .map((img) => img.getAttribute('src'))
-          .filter((src): src is string => !!src); // Type guard to filter out null values
+          .filter((src): src is string => !!src);
 
-        scrapedImages.push(...images); // Add found image sources to the result
+        scrapedImages.push(...images);
       });
     });
 
@@ -44,10 +104,9 @@ export async function imgScraper(url: string): Promise<string | null> {
 
     if (scrapedImages.length === 0) {
       console.log('No images found.');
-      return null; // No images to process
+      return null;
     }
 
-    // Fetch dimensions for each image and find the largest one
     const dimensionResults = await Promise.all(scrapedImages.map(getImageDimensions));
     const validDimensions = dimensionResults.filter((result): result is { url: string; width: number; height: number } => !!result);
 
@@ -56,7 +115,6 @@ export async function imgScraper(url: string): Promise<string | null> {
       return null;
     }
 
-    // Find the image with the largest dimensions (width * height)
     const largestImage = validDimensions.reduce((max, current) => {
       const maxArea = max.width * max.height;
       const currentArea = current.width * current.height;
