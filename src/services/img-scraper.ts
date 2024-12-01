@@ -53,8 +53,8 @@ async function scrapePage(url: string) {
       device: 'desktop',
     },
   });
-  var decoder = new TextDecoder();
-  var text = decoder.decode(response.data);
+  const decoder = new TextDecoder();
+  const text = decoder.decode(response.data);
   return text;
 }
 
