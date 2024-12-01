@@ -1,17 +1,7 @@
 'use server';
 import { JSDOM } from 'jsdom';
-import puppeteer from 'puppeteer-core';
 import probe from 'probe-image-size';
-import chrome from 'chrome-aws-lambda';
-
-// if (process.env.ENV === 'prod') {
-//   chrome = require('chrome-aws-lambda');
-//   puppeteer = require('puppeteer-core');
-// } else {
-//   puppeteer = require('puppeteer');
-// }
-
-let options = {};
+import axios from 'axios';
 
 const ELEMENTS_TO_REMOVE = ['script', 'noscript', 'style', 'header', 'footer', 'nav', 'aside', 'label', 'input', 'select', 'option', 'link', 'iframe', 'meta'];
 
@@ -36,7 +26,7 @@ const scrapingSelectors: Record<string, string[]> = {
 
   'www.temu.com': ['div.mainContent', 'div.product-image-container'],
   'www.etsy.com': ['div.image-carousel-container'],
-  'www.lowes.com': ['div.viewport'], //access denied
+  'www.lowes.com': ['div.viewport'],
 
   'www.newegg.com': ['div.product-view-img-original img', 'div.product-image img'],
 
@@ -55,33 +45,6 @@ async function getImageDimensions(url: string): Promise<{ url: string; width: nu
   }
 }
 
-async function scrapeWithPuppeteer(url: string): Promise<string> {
-  options = {
-    args: [...chrome.args, '--hide-scrollbars', '--disable-web-security'],
-    defaultViewport: chrome.defaultViewport,
-    executablePath: await chrome.executablePath,
-    headless: true,
-    ignoreHTTPSErrors: true,
-  };
-
-  try {
-    const browser = await puppeteer.launch(options);
-    const page = await browser.newPage();
-
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36');
-    await page.setViewport({ width: 1920, height: 1080 });
-
-    await page.goto(url, { waitUntil: 'networkidle2' });
-
-    const content = await page.content();
-    await browser.close();
-    return content;
-  } catch (error) {
-    console.error('Error using Puppeteer to scrape content:', error);
-    throw error;
-  }
-}
-
 export async function imgScraper(url: string): Promise<string | null> {
   console.log('IMAGE SCRAPER HAS BEEN CALLED: ', url);
 
@@ -91,7 +54,8 @@ export async function imgScraper(url: string): Promise<string | null> {
     const WHERE_TO_SCRAPE = scrapingSelectors[domain] || ['body'];
     console.log('WHERE TO SCRAPE: ', WHERE_TO_SCRAPE);
 
-    const html = await scrapeWithPuppeteer(url);
+    const response = await axios.get(url);
+    const html = response.data;
     const dom = new JSDOM(html);
     const document = dom.window.document;
 
