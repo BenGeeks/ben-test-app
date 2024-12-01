@@ -63,7 +63,6 @@ export async function imgScraper(url: string): Promise<string | null> {
 
   try {
     const domain = new URL(url).hostname;
-    console.log('DOMAIN: ', domain);
     const WHERE_TO_SCRAPE = scrapingSelectors[domain] || ['body'];
     console.log('WHERE TO SCRAPE: ', WHERE_TO_SCRAPE);
 
