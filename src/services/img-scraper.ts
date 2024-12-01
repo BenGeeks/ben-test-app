@@ -29,7 +29,6 @@ const scrapingSelectors: Record<string, string[]> = {
   'www.lowes.com': ['div.viewport'],
 
   'www.newegg.com': ['div.product-view-img-original img', 'div.product-image img'],
-
   'www.ikea.com': ['div.range-image-gallery img', 'div.product-pictures img'],
   'www.kohls.com': ['div.product-image-main img', 'div.thumbnail-container img'],
 };
