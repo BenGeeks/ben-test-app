@@ -1,7 +1,7 @@
 'use server';
 import { JSDOM } from 'jsdom';
 import probe from 'probe-image-size';
-import axios from 'axios';
+import scrapingbee from 'scrapingbee';
 
 const ELEMENTS_TO_REMOVE = ['script', 'noscript', 'style', 'header', 'footer', 'nav', 'aside', 'label', 'input', 'select', 'option', 'link', 'iframe', 'meta'];
 
@@ -18,11 +18,11 @@ const scrapingSelectors: Record<string, string[]> = {
   'www.craigslist.org': ['body'],
   'www.costco.com': ['div.zoomViewer'],
   'www.chewy.com': ['div[data-testid="product-carousel"]'],
+  'shopee.ph': ['div.page-product'],
 
   'www.kroger.com': ['body'],
   'www.apple.com': ['picture.overview-hero-hero-static-1'],
   'www.homedepot.com': ['body'],
-  'shopee.ph': ['body'],
 
   'www.temu.com': ['div.mainContent', 'div.product-image-container'],
   'www.etsy.com': ['div.image-carousel-container'],
@@ -44,6 +44,20 @@ async function getImageDimensions(url: string): Promise<{ url: string; width: nu
   }
 }
 
+async function scrapePage(url: string) {
+  console.log('SCRAPE PAGE HAS BEEN CALLED: ', url);
+  const client = new scrapingbee.ScrapingBeeClient(process.env.SCRAPING_BEE_API_KEY as string);
+  const response = await client.get({
+    url,
+    params: {
+      device: 'desktop',
+    },
+  });
+  var decoder = new TextDecoder();
+  var text = decoder.decode(response.data);
+  return text;
+}
+
 export async function imgScraper(url: string): Promise<string | null> {
   console.log('IMAGE SCRAPER HAS BEEN CALLED: ', url);
 
@@ -53,8 +67,7 @@ export async function imgScraper(url: string): Promise<string | null> {
     const WHERE_TO_SCRAPE = scrapingSelectors[domain] || ['body'];
     console.log('WHERE TO SCRAPE: ', WHERE_TO_SCRAPE);
 
-    const response = await axios.get(url);
-    const html = response.data;
+    const html = await scrapePage(url);
     const dom = new JSDOM(html);
     const document = dom.window.document;
 
