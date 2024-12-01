@@ -4,9 +4,6 @@ import puppeteer from 'puppeteer-core';
 import probe from 'probe-image-size';
 import chrome from 'chrome-aws-lambda';
 
-// let chrome: any = {};
-// let puppeteer: any;
-
 // if (process.env.ENV === 'prod') {
 //   chrome = require('chrome-aws-lambda');
 //   puppeteer = require('puppeteer-core');
