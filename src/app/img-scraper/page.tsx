@@ -73,6 +73,7 @@ export default function Home() {
           {isLoading && <p className="text-gray-500">Loading...</p>}
           {!isLoading && error && <p className="text-red-600">{error}</p>}
           {!isLoading && !error && !image && <p className="text-gray-500">No image found.</p>}
+          {/* @next/next/no-img-element */}
           {!isLoading && image && <img src={image} alt="Largest Image" className="max-w-full max-h-full" />}
         </div>
       </div>

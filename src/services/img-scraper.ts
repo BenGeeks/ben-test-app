@@ -5,10 +5,6 @@ import probe from 'probe-image-size';
 
 const ELEMENTS_TO_REMOVE = ['script', 'noscript', 'style', 'header', 'footer', 'nav', 'aside', 'label', 'input', 'select', 'option', 'link', 'iframe', 'meta'];
 
-let s = {
-  'www.etsy.com': ['div.image-carousel-container', 'div.listing-page-image-carousel-component', 'div#main-image-container', 'div.product-image-wrapper'],
-};
-
 const scrapingSelectors: Record<string, string[]> = {
   'www.amazon.com': ['div#main-image-container'],
   'www.macys.com': ['div.productImage', 'div.product-image-wrapper'],
